@@ -1,0 +1,17 @@
+TELE-SOURCE DE VIE/GOMA — site web
+
+FICHIERS
+- index.html : structure et contenu du site
+- style.css : design responsive rouge, bleu et blanc
+- script.js : menu mobile, lecteur radio et formulaire de contact
+
+À CONFIGURER AVANT PUBLICATION
+1. Ouvrir script.js.
+2. Remplacer RADIO_STREAM_URL par l'adresse réelle du flux audio (URL du serveur de streaming).
+3. Remplacer RADIO_EMAIL par l'adresse officielle de la radio.
+4. Modifier dans index.html les coordonnées et textes de présentation selon les informations exactes de la radio.
+
+UTILISATION
+Ouvrir index.html dans un navigateur pour prévisualiser le site.
+Pour le mettre en ligne, téléverser les trois fichiers dans le dossier public de votre hébergeur (souvent public_html).
+Le lecteur ne peut diffuser la radio tant que l'URL réelle du flux audio n'est pas renseignée.
