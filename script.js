@@ -1,77 +1,94 @@
-// CONFIGURATION : remplacez ces valeurs par les informations officielles de la radio.
-const RADIO_STREAM_URL = ""; // Exemple : https://serveur-radio.example/live
-const RADIO_EMAIL = "";      // Exemple : contact@votreradio.cd
+document.addEventListener("DOMContentLoaded", function () {
 
-const audio = document.getElementById("radioAudio");
-const playButton = document.getElementById("playButton");
-const playerStatus = document.getElementById("playerStatus");
-const playerMessage = document.getElementById("playerMessage");
-const equalizer = document.querySelector(".equalizer");
+    // Année automatique
+ const annee = document.getElementById("year");
+  if (annee) {
+        annee.textContent = new Date().getFullYear();
+    }
 
-document.getElementById("year").textContent = new Date().getFullYear();
+    // Lecteur radio
+    const audio = document.getElementById("lecteur");
+const btn = document.getElementById("btn-play");
+const volume = document.getElementById("volume");
+const enCours = document.getElementById("en-cours");
 
-playButton.addEventListener("click", async () => {
-  if (!RADIO_STREAM_URL) {
-    playerStatus.textContent = "Flux audio à configurer";
-    playerMessage.textContent = "Ajoutez l'adresse du flux radio dans le fichier script.js pour activer l'écoute en direct.";
-    return;
-  }
+btn.addEventListener("click", async () => {
   if (audio.paused) {
-    audio.src = RADIO_STREAM_URL;
+    // recharge le flux pour être bien "en direct" (pas de retard cumulé)
+    audio.src = audio.src.split("?")[0] + "?t=" + Date.now();
     try {
       await audio.play();
-      playButton.textContent = "Ⅱ";
-      playButton.setAttribute("aria-label", "Mettre en pause");
-      playerStatus.textContent = "Vous écoutez TELE-SOURCE DE VIE";
-      playerMessage.textContent = "Direct radio";
-      equalizer.classList.add("playing");
-    } catch (error) {
-      playerStatus.textContent = "Connexion impossible";
-      playerMessage.textContent = "Vérifiez l'adresse du flux audio ou réessayez plus tard.";
+      btn.textContent = "⏸ Pause";
+    } catch (e) {
+      enCours.textContent = "Impossible de lire le flux pour le moment.";
     }
   } else {
     audio.pause();
-    playButton.textContent = "▶";
-    playButton.setAttribute("aria-label", "Lire le direct");
-    playerStatus.textContent = "Lecture en pause";
-    playerMessage.textContent = "Appuyez sur lecture pour reprendre.";
-    equalizer.classList.remove("playing");
+    btn.textContent = "▶ Écouter";
   }
 });
 
-audio.addEventListener("ended", () => {
-  playButton.textContent = "▶";
-  equalizer.classList.remove("playing");
-});
+volume.addEventListener("input", () => (audio.volume = volume.value));
+
 audio.addEventListener("error", () => {
-  playerStatus.textContent = "Flux indisponible";
-  playerMessage.textContent = "Le serveur radio ne répond pas. Réessayez ultérieurement.";
-  playButton.textContent = "▶";
-  equalizer.classList.remove("playing");
+  btn.textContent = "▶ Écouter";
+  enCours.textContent = "Flux indisponible, réessayez dans un instant.";
 });
 
-const menuToggle = document.getElementById("menuToggle");
-const mainNav = document.getElementById("mainNav");
-menuToggle.addEventListener("click", () => {
-  const opened = mainNav.classList.toggle("open");
-  menuToggle.setAttribute("aria-expanded", String(opened));
-  menuToggle.textContent = opened ? "✕" : "☰";
-});
-mainNav.querySelectorAll("a").forEach(link => link.addEventListener("click", () => {
-  mainNav.classList.remove("open");
-  menuToggle.setAttribute("aria-expanded", "false");
-  menuToggle.textContent = "☰";
-}));
+// Titre en cours : interroge la route /api/now-playing de Flask
+async function majTitre() {
+  try {
+    const r = await fetch("/api/now-playing");
+    const d = await r.json();
+    enCours.textContent = d.artist ? `${d.artist} – ${d.title}` : d.title;
+  } catch (e) {}
+}
+majTitre();
+setInterval(majTitre, 10000);
 
-document.getElementById("contactForm").addEventListener("submit", event => {
-  event.preventDefault();
-  const note = document.getElementById("formNote");
-  if (!RADIO_EMAIL) {
-    note.textContent = "Configurez d'abord RADIO_EMAIL dans script.js avec l'adresse officielle de la radio.";
-    return;
-  }
-  const data = new FormData(event.currentTarget);
-  const subject = encodeURIComponent("Message depuis le site TELE-SOURCE DE VIE/GOMA");
-  const body = encodeURIComponent(`Nom : ${data.get("name")}\nE-mail : ${data.get("email")}\n\nMessage :\n${data.get("message")}`);
-  window.location.href = `mailto:${RADIO_EMAIL}?subject=${subject}&body=${body}`;
+    // Formulaire de contact
+    const formulaire = document.getElementById("contactForm");
+    const statut = document.getElementById("messageStatus");
+
+    if (!formulaire) return;
+
+    formulaire.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const nom = formulaire.querySelector('[name="nom"]').value.trim();
+        const email = formulaire.querySelector('[name="email"]').value.trim();
+        const message = formulaire.querySelector('[name="message"]').value.trim();
+
+        const adresseEmail = ""; // Mettre ici l'adresse e-mail officielle
+
+        if (!adresseEmail) {
+            statut.textContent = "L'adresse e-mail de la radio doit être configurée.";
+            return;
+        }
+
+        if (!nom || !email || !message) {
+            statut.textContent = "Merci de remplir tous les champs.";
+            return;
+        }
+
+        const sujet = encodeURIComponent("Message depuis le site TELE-SOURCE DE VIE");
+        const contenu = encodeURIComponent(
+            "Nom : " + nom + "\r\n" +
+            "Email : " + email + "\r\n" +
+            "Message : " + message
+        );
+
+        statut.textContent = "Ouverture de votre messagerie...";
+        window.location.href =
+            "mailto:" + adresseEmail + "?subject=" + sujet + "&body=" + contenu;
+    document.addEventListener("DOMContentLoaded", () => {
+  const logo = document.createElement("img");
+  logo.src = "/static/logo.png";
+  logo.alt = "Logo Radio Télé Source de Vie";
+  logo.className = "logo";
+
+  const entete = document.querySelector("header");
+  entete.prepend(logo);   // ajoute le logo au début du header
+});
+    });
 });
